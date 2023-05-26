@@ -2,7 +2,7 @@
 
 * Go client for the Proxmox-VE REST API (https://pve.proxmox.com/wiki/Proxmox_VE_API)
 
-* This code is based on Go package [go-proxmox](https://github.com/sp-yduck/proxmox)
+* This code is based on Go package [go-proxmox](https://github.com/luthermonson/go-proxmox)
 
 
 # Proxmox API Client Go Package
