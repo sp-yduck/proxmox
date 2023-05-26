@@ -1,9 +1,9 @@
 package mocks
 
 import (
-	"github.com/luthermonson/go-proxmox/tests/mocks/pve6x"
-	"github.com/luthermonson/go-proxmox/tests/mocks/pve7x"
-	"github.com/luthermonson/go-proxmox/tests/mocks/types"
+	"github.com/sp-yduck/proxmox/tests/mocks/pve6x"
+	"github.com/sp-yduck/proxmox/tests/mocks/pve7x"
+	"github.com/sp-yduck/proxmox/tests/mocks/types"
 )
 
 func ProxmoxVE7x(config types.Config) {

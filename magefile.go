@@ -12,10 +12,10 @@ import (
 	"github.com/magefile/mage/sh"
 
 	//mage:import install
-	"github.com/luthermonson/go-proxmox/mage/install"
+	"github.com/sp-yduck/proxmox/mage/install"
 
 	//mage:import test
-	"github.com/luthermonson/go-proxmox/mage/test"
+	"github.com/sp-yduck/proxmox/mage/test"
 )
 
 var (

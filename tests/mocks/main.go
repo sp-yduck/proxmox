@@ -2,7 +2,7 @@ package mocks
 
 import (
 	"github.com/h2non/gock"
-	"github.com/luthermonson/go-proxmox/tests/mocks/types"
+	"github.com/sp-yduck/proxmox/tests/mocks/types"
 )
 
 const TestURI = "http://test.localhost"

@@ -1,7 +1,7 @@
 package pve6x
 
 import (
-	"github.com/luthermonson/go-proxmox/tests/mocks/types"
+	"github.com/sp-yduck/proxmox/tests/mocks/types"
 )
 
 var routes types.Routes

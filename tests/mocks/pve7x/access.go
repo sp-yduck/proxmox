@@ -1,6 +1,6 @@
 package pve7x
 
-import "github.com/luthermonson/go-proxmox/tests/mocks/types"
+import "github.com/sp-yduck/proxmox/tests/mocks/types"
 
 func init() {
 	access()

@@ -3,7 +3,7 @@ package integration
 import (
 	"testing"
 
-	"github.com/luthermonson/go-proxmox"
+	"github.com/sp-yduck/proxmox"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +14,7 @@ func TestLogin(t *testing.T) {
 
 	err = client.Login(td.username, td.password)
 	assert.Nil(t, err)
-	
+
 	version, err := client.Version()
 	assert.Nil(t, err)
 	assert.NotEmpty(t, version.Version)

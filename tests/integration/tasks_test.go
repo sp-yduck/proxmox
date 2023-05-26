@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luthermonson/go-proxmox"
+	"github.com/sp-yduck/proxmox"
 	"github.com/stretchr/testify/assert"
 )
 

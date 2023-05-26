@@ -1,28 +1,12 @@
+# Overview
+
+* Go client for the Proxmox-VE REST API (https://pve.proxmox.com/wiki/Proxmox_VE_API)
+
+* This code is based on Go package [go-proxmox](https://github.com/sp-yduck/proxmox)
+
+
 # Proxmox API Client Go Package
-Join the community to discuss the client development, usage, the proxmox API or tooling in the [#go-proxmox](https://gophers.slack.com/archives/C05920LDDD3) channel on the Gophers Slack and see the [self generated docs](https://pkg.go.dev/github.com/luthermonson/go-proxmox) for more usage details.
-
-A Go package containing a client for [Proxmox VE](https://www.proxmox.com/). The client implements [/api2/json](https://pve.proxmox.com/pve-docs/api-viewer/index.html) and inspiration was drawn from the existing
-[Telmate](https://github.com/Telmate/proxmox-api-go/tree/master/proxmox) package but looking to improve
-in the following ways...
-* Treated as a proper standalone go package
-* Types and JSON marshal/unmarshalling for all end points
-* Full Testing, unit testing and integration tests against an API endpoint
-* Configuration options when creating a client for flexible usage
-* Client logging for debugging within your code
-* Added functionality for better go tooling built on this library, some things we'd like
-  * Boot VM from qcow URL, inspiration: [Proxmox Linux Templates](https://www.phillipsj.net/posts/proxmox-linux-templates/)
-  * Dynamic host targeting for VM, Proxmox lacks a scheduler when given VM params it will try and locate a host with resources to put it
-  * cloud-init support via no-cloud ISOs uploaded to node data stores and auto-mounted before boot, inspiration [quiso](https://github.com/luthermonson/quiso)
-  * Unattend XML Support via ISOs similar to cloud-init ideas
-  * node/vm/container shell command support via KVM proxy already built into proxmox
-
-Core developers are home lab enthusiasts working in the virtualization and kubernetes space. The common use case we have for
-Proxmox is dev stress testing and validation of functionality in the products we work on, we plan to build the following tooling 
-around this library to make that easier.
-* [Docker Machine Driver](https://github.com/luthermonson/docker-machine-driver-proxmox) for consumption by (Rancher)[https://rancher.com/docs/rancher/v1.5/en/configuration/machine-drivers/]
-* [Terminal UI](https://github.com/luthermonson/p9s) inspired by [k9s](https://github.com/derailed/k9s) for quick management of PVE Clusters
-* [Terraform Provider](https://github.com/luthermonson/terraform-provider-proxmox) with better local-exec and cloud-init/unattend xml support
-* [Cluster API Provider Proxmox](https://github.com/luthermonson/cluster-api-provider-proxmox) to create kubernetes clusters
+A Go package containing a client for [Proxmox VE](https://www.proxmox.com/). The client implements [/api2/json](https://pve.proxmox.com/pve-docs/api-viewer/index.html) and aims to provide better sdk solution for especially [cluster-api-provider-proxmox](https://github.com/sp-yduck/cluster-api-provider-proxmox) project.
 
 ## Usage
 Create a client and use the public methods to access Proxmox resources.
@@ -33,7 +17,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/luthermonson/go-proxmox"
+	"github.com/sp-yduck/proxmox"
 )
 
 func main() {
@@ -55,7 +39,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/luthermonson/go-proxmox"
+	"github.com/sp-yduck/proxmox"
 )
 
 func main() {
