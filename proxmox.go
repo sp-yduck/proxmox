@@ -140,28 +140,24 @@ func (c *Client) Get(p string, v interface{}) error {
 }
 
 func (c *Client) Post(p string, d interface{}, v interface{}) error {
-	var data []byte
-	if d != nil {
-		var err error
-		data, err = json.Marshal(d)
-		if err != nil {
-			return err
-		}
+	if d == nil {
+		c.Req(http.MethodPost, p, nil, v)
 	}
-
+	data, err := json.Marshal(d)
+	if err != nil {
+		return err
+	}
 	return c.Req(http.MethodPost, p, data, v)
 }
 
 func (c *Client) Put(p string, d interface{}, v interface{}) error {
-	var data []byte
-	if d != nil {
-		var err error
-		data, err = json.Marshal(d)
-		if err != nil {
-			return err
-		}
+	if d == nil {
+		return c.Req(http.MethodPut, p, nil, v)
 	}
-
+	data, err := json.Marshal(d)
+	if err != nil {
+		return err
+	}
 	return c.Req(http.MethodPut, p, data, v)
 }
 

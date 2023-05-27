@@ -1,6 +1,8 @@
 package proxmox
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // "fmt"
 // "net/url"
@@ -35,8 +37,12 @@ func (c *Client) NewNodeClient(name string) (*NodeClient, error) {
 	return &NodeClient{Client: c, Node: node}, nil
 }
 
+func qemuPath(node string) string {
+	return fmt.Sprintf("/nodes/%s/qemu", node)
+}
+
 func (c *NodeClient) VirtualMachines() ([]*VirtualMachine, error) {
-	path := fmt.Sprintf("/nodes/%s/qemu", c.Node.Node)
+	path := qemuPath(c.Node.Node)
 	var vms []*VirtualMachine
 	if err := c.Get(path, &vms); err != nil {
 		return nil, err
@@ -55,6 +61,28 @@ func (c *NodeClient) VirtualMachine(vmid int) (*VirtualMachine, error) {
 		}
 	}
 	return nil, ErrNotFound
+}
+
+// to do : options
+func (c *NodeClient) CreateVirtualMachine(vmid int) (string, error) {
+	path := qemuPath(c.Node.Node)
+	data := make(map[string]interface{})
+	data["vmid"] = vmid
+	var res string
+	if err := c.Post(path, data, res); err != nil {
+		return "", err
+	}
+	return res, nil
+}
+
+// to do : options
+func (c *NodeClient) DeleteVirtualMachine(vmid int) (string, error) {
+	path := fmt.Sprintf("%s/%d", qemuPath(c.Node.Node), vmid)
+	var res string
+	if err := c.Delete(path, res); err != nil {
+		return "", err
+	}
+	return res, nil
 }
 
 // func (c *Client) Node(name string) (*Node, error) {
