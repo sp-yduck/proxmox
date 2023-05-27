@@ -6,6 +6,7 @@ import (
 	// "os"
 	// "path/filepath"
 	// "strings"
+	"fmt"
 	"time"
 	// "github.com/diskfs/go-diskfs/filesystem/iso9660"
 )
@@ -24,6 +25,16 @@ const (
 
 // DefaultAgentWaitInterval is the polling interval when waiting for agent exec commands
 var DefaultAgentWaitInterval = 100 * time.Millisecond
+
+// to do : options
+func (vm *VirtualMachine) Delete() (string, error) {
+	path := fmt.Sprintf("%s/%d", qemuPath(vm.nodeName), vm.VMID)
+	var res string
+	if err := vm.Client.Delete(path, res); err != nil {
+		return "", err
+	}
+	return res, nil
+}
 
 // func (v *VirtualMachine) Ping() error {
 // 	return v.client.Get(fmt.Sprintf("/nodes/%s/qemu/%d/status/current", v.Node, v.VMID), &v)

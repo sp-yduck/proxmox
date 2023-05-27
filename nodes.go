@@ -4,14 +4,13 @@ import (
 	"fmt"
 )
 
-// "fmt"
-// "net/url"
-// "strings"
-
 func (c *Client) Nodes() ([]*Node, error) {
 	var nodes []*Node
 	if err := c.Get("/nodes", &nodes); err != nil {
 		return nil, err
+	}
+	for _, n := range nodes {
+		n.Client = c
 	}
 	return nodes, nil
 }
@@ -29,28 +28,24 @@ func (c *Client) Node(name string) (*Node, error) {
 	return nil, ErrNotFound
 }
 
-func (c *Client) NewNodeClient(name string) (*NodeClient, error) {
-	node, err := c.Node(name)
-	if err != nil {
-		return nil, err
-	}
-	return &NodeClient{Client: c, Node: node}, nil
-}
-
 func qemuPath(node string) string {
 	return fmt.Sprintf("/nodes/%s/qemu", node)
 }
 
-func (c *NodeClient) VirtualMachines() ([]*VirtualMachine, error) {
-	path := qemuPath(c.Node.Node)
+func (c *Node) VirtualMachines() ([]*VirtualMachine, error) {
+	path := qemuPath(c.Node)
 	var vms []*VirtualMachine
-	if err := c.Get(path, &vms); err != nil {
+	if err := c.Client.Get(path, &vms); err != nil {
 		return nil, err
+	}
+	for _, vm := range vms {
+		vm.Client = c.Client
+		vm.nodeName = c.Node
 	}
 	return vms, nil
 }
 
-func (c *NodeClient) VirtualMachine(vmid int) (*VirtualMachine, error) {
+func (c *Node) VirtualMachine(vmid int) (*VirtualMachine, error) {
 	vms, err := c.VirtualMachines()
 	if err != nil {
 		return nil, err
@@ -64,22 +59,26 @@ func (c *NodeClient) VirtualMachine(vmid int) (*VirtualMachine, error) {
 }
 
 // to do : options
-func (c *NodeClient) CreateVirtualMachine(vmid int) (string, error) {
-	path := qemuPath(c.Node.Node)
+func (c *Node) CreateVirtualMachine(vmid int) (*VirtualMachine, error) {
+	path := qemuPath(c.Node)
 	data := make(map[string]interface{})
 	data["vmid"] = vmid
 	var res string
-	if err := c.Post(path, data, res); err != nil {
-		return "", err
+	if err := c.Client.Post(path, data, res); err != nil {
+		return nil, err
 	}
-	return res, nil
+	vm, err := c.VirtualMachine(vmid)
+	if err != nil {
+		return nil, err
+	}
+	return vm, nil
 }
 
 // to do : options
-func (c *NodeClient) DeleteVirtualMachine(vmid int) (string, error) {
-	path := fmt.Sprintf("%s/%d", qemuPath(c.Node.Node), vmid)
+func (c *Node) DeleteVirtualMachine(vmid int) (string, error) {
+	path := fmt.Sprintf("%s/%d", qemuPath(c.Node), vmid)
 	var res string
-	if err := c.Delete(path, res); err != nil {
+	if err := c.Client.Delete(path, res); err != nil {
 		return "", err
 	}
 	return res, nil

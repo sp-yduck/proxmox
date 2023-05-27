@@ -162,6 +162,7 @@ type NodeStatus struct {
 }
 
 type Node struct {
+	Client         *Client
 	Cpu            float32
 	Disk           int
 	ID             string
@@ -176,12 +177,9 @@ type Node struct {
 	UpTime         int
 }
 
-type NodeClient struct {
-	*Client
-	*Node
-}
-
 type VirtualMachine struct {
+	Client    *Client
+	nodeName  string
 	Cpu       float32
 	Cpus      int
 	Disk      int
