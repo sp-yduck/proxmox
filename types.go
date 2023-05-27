@@ -162,48 +162,86 @@ type NodeStatus struct {
 }
 
 type Node struct {
-	Name       string
-	client     *Client
-	Kversion   string
-	LoadAvg    []string
-	CPU        float64
-	RootFS     RootFS
-	PVEVersion string
-	CPUInfo    CPUInfo
-	Swap       Memory
-	Idle       int
-	Memory     Memory
-	Ksm        Ksm
-	Uptime     uint64
-	Wait       float64
+	Cpu            float32
+	Disk           int
+	ID             string
+	Level          string
+	MaxCpu         int
+	MaxMem         int
+	Mem            int
+	Node           string
+	SSLFingerprint string
+	Stauts         string
+	Type           string
+	UpTime         int
 }
 
-type VirtualMachines []*VirtualMachine
+type NodeClient struct {
+	*Client
+	*Node
+}
+
 type VirtualMachine struct {
-	client               *Client
-	VirtualMachineConfig *VirtualMachineConfig
-
+	Cpu       float32
+	Cpus      int
+	Disk      int
+	DiskRead  int
+	DiskWrite int
+	MaxDisk   int
+	MaxMem    int
+	Mem       int
 	Name      string
-	Node      string
-	NetIn     uint64
-	CPUs      int
-	DiskWrite uint64
+	NetIn     int
+	NetOut    int
 	Status    string
-	Lock      string `json:",omitempty"`
-	VMID      StringOrUint64
-	PID       StringOrUint64
-	Netout    uint64
-	Disk      uint64
-	Uptime    uint64
-	Mem       uint64
-	CPU       float64
-	MaxMem    uint64
-	MaxDisk   uint64
-	DiskRead  uint64
-	QMPStatus string     `json:"qmpstatus,omitempty"`
-	Template  IsTemplate // empty str if a vm, int 1 if a template
-	HA        HA         `json:",omitempty"`
+	Template  int
+	UpTime    int
+	VMID      int
 }
+
+// type Node struct {
+// 	Name       string
+// 	client     *Client
+// 	Kversion   string
+// 	LoadAvg    []string
+// 	CPU        float64
+// 	RootFS     RootFS
+// 	PVEVersion string
+// 	CPUInfo    CPUInfo
+// 	Swap       Memory
+// 	Idle       int
+// 	Memory     Memory
+// 	Ksm        Ksm
+// 	Uptime     uint64
+// 	Wait       float64
+// }
+
+// type VirtualMachines []*VirtualMachine
+// type VirtualMachine struct {
+// 	client               *Client
+// 	VirtualMachineConfig *VirtualMachineConfig
+
+// 	Name      string
+// 	Node      string
+// 	NetIn     uint64
+// 	CPUs      int
+// 	DiskWrite uint64
+// 	Status    string
+// 	Lock      string `json:",omitempty"`
+// 	VMID      StringOrUint64
+// 	PID       StringOrUint64
+// 	Netout    uint64
+// 	Disk      uint64
+// 	Uptime    uint64
+// 	Mem       uint64
+// 	CPU       float64
+// 	MaxMem    uint64
+// 	MaxDisk   uint64
+// 	DiskRead  uint64
+// 	QMPStatus string     `json:"qmpstatus,omitempty"`
+// 	Template  IsTemplate // empty str if a vm, int 1 if a template
+// 	HA        HA         `json:",omitempty"`
+// }
 
 type HA struct {
 	Managed int

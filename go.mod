@@ -8,7 +8,9 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/h2non/gock v1.2.0
 	github.com/jinzhu/copier v0.3.4
+	github.com/luthermonson/go-proxmox v0.0.0-alpha3
 	github.com/magefile/mage v1.14.0
+	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
 )
 
