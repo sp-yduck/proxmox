@@ -38,7 +38,7 @@ type Version struct {
 
 type VNC struct {
 	Cert   string
-	Port   StringOrInt
+	Port   int
 	Ticket string
 	UPID   string
 	User   string
@@ -161,22 +161,6 @@ type NodeStatus struct {
 	Local  int    `json:",omitempty"`
 }
 
-type Node struct {
-	Client         *Client
-	Cpu            float32
-	Disk           int
-	ID             string
-	Level          string
-	MaxCpu         int
-	MaxMem         int
-	Mem            int
-	Node           string
-	SSLFingerprint string
-	Stauts         string
-	Type           string
-	UpTime         int
-}
-
 type VirtualMachine struct {
 	Client    *Client
 	nodeName  string
@@ -195,6 +179,111 @@ type VirtualMachine struct {
 	Template  int
 	UpTime    int
 	VMID      int
+}
+
+type Arch string
+type OSType string
+type ScsiHw string
+
+const (
+	X86_64  Arch = "x86_64"
+	Aarch64 Arch = "aarch64"
+)
+
+const (
+	Other OSType = "other"
+	Wxp
+	W2k
+	W2k3
+	W2k8
+	Wvista
+	Win7
+	Win8
+	Win10
+	Win11
+	// linux 2.4 kernel
+	L24 OSType = "l24"
+	// linux 2.6-6 kernel
+	L26     OSType = "l26"
+	Solaris OSType = "solaris"
+)
+
+const (
+	Lsi              = "lsi"
+	Lsi53c810        = "lsi53c810"
+	VirtioScsiPci    = "virtio-scsi-pci"
+	VirtioScsiSingle = "virtio-scsi-single"
+	Megasas          = "megasas"
+	Pvscsi           = "pvscsi"
+)
+
+type Ide struct {
+	Ide0 string `json:"ide0,omitempty"`
+}
+
+type Net struct {
+	Net0 string `json:"net0,omitempty"`
+}
+
+// wip n = 0~30
+type Scsi struct {
+	Scsi0 string `json:"scsi0,omitempty"`
+}
+
+// wip
+// reference : https://pve.proxmox.com/pve-docs/api-viewer/#/nodes/{node}/qemu
+type VirtualMachineCreateOptions struct {
+	Acpi     bool   `json:"acpi,omitempty"`
+	Affinity string `json:"affinity,omitempty"`
+	Agent    string `json:"agent,omitempty"`
+	Arch     Arch   `json:"arch,omitempty"`
+	// boot order. ";" separated. : 'order=device1;device2;device3'
+	Boot string `json:"boot,omitempty"`
+	// number of cores : 1 ~
+	Cores int `json:"cores,omitempty"`
+	// emulated cpu type
+	Cpu string `json:"cpu,omitempty"`
+	// limit of cpu usage : 0 ~
+	// 0 indicated no limit
+	CpuLimit    int    `json:",omitempty"`
+	Description string `json:",omitempty"`
+
+	// allow to overwrite existing VM
+	Force bool `json:",omitempty"`
+	// Use volume as IDE hard disk or CD-ROM (n is 0 to 3).
+	// Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume.
+	// Use STORAGE_ID:0 and the 'import-from' parameter to import from an existing volume.
+	Ide
+	// enable/disable KVM hardware virtualization
+	Kvm bool `json:",omitempty"`
+	// specifies the QEMU machine type
+	Machine string `json:",omitempty"`
+	// amount of RAM for the VM in MiB : 16 ~
+	Memory int `json:"memory,omitempty"`
+	// name for VM. Only used on the configuration web interface
+	Name string `json:"name,omitempty"`
+	// network device
+	Net
+	// specifies whether a VM will be started during system bootup
+	OnBoot bool `json:",omitempty"`
+	// quest OS
+	OSType OSType `json:"ostype,omitempty"`
+	// use volume as scsi hard disk or cd-rom
+	// use special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume
+	// use STORAGE_ID:0 and the 'import-from' parameter to import from an existing volume.
+	Scsi
+	// SCSI controller model
+	ScsiHw ScsiHw `json:"scsihw,omitempty"`
+	// cloud-init setup public ssh keys (one key per line, OpenSSH format)
+	SSHKeys string `json:",omitempty"`
+	// start VM after it was created successfully
+	Start bool `json:"start,omitempty"`
+	// tags of the VM. only for meta information
+	Tags string `json:",omitempty"`
+	// enable/disable template
+	Template bool `json:",omitempty"`
+	// vm id
+	VMID int `json:"vmid,omitempty"`
 }
 
 // type Node struct {
@@ -649,17 +738,16 @@ type Storages []*Storage
 type Storage struct {
 	client       *Client
 	Node         string
-	Name         string `json:"storage"`
-	Enabled      int
-	UsedFraction float64 `json:"used_fraction"`
 	Active       int
+	Avail        int
 	Content      string
+	Enabled      int
 	Shared       int
-	Avail        uint64
-	Type         string
-	Used         uint64
-	Total        uint64
 	Storage      string
+	Total        int
+	Type         string
+	Used         int
+	UsedFraction float64 `json:"used_fraction"`
 }
 
 type Volume interface {
@@ -676,18 +764,21 @@ type Backups []*Backup
 type Backup struct{ Content }
 
 type Content struct {
-	client  *Client
-	URL     string
-	Node    string
-	Storage string `json:",omitempty"`
-	Content string `json:",omitempty"`
-	VolID   string `json:",omitempty"`
-	CTime   uint64 `json:",omitempty"`
-	Format  string
-	Size    StringOrUint64
-	Used    StringOrUint64 `json:",omitempty"`
-	Path    string         `json:",omitempty"`
-	Notes   string         `json:",omitempty"`
+	client    *Client
+	Node      string
+	Storage   string `json:",omitempty"`
+	Content   string `json:",omitempty"`
+	CTime     string `json:",omitempty"`
+	Encrypted string
+	Format    string
+	Notes     string
+	Parent    string
+	Protected bool
+	Size      int
+	Used      int
+	// to do : Verificateion
+	VMID  int
+	VolID string `josn:"volid,omitempty"`
 }
 
 type IsTemplate bool
@@ -698,25 +789,6 @@ func (it *IsTemplate) UnmarshalJSON(b []byte) error {
 		*it = false
 	}
 
-	return nil
-}
-
-type StringOrInt int
-
-func (d *StringOrInt) UnmarshalJSON(b []byte) error {
-	str := strings.Replace(string(b), "\"", "", -1)
-
-	numeric := numericRegex.MatchString(str)
-	if !numeric {
-		*d = StringOrInt(0)
-		return nil
-	}
-
-	parsed, err := strconv.ParseUint(str, 0, 64)
-	if err != nil {
-		return err
-	}
-	*d = StringOrInt(parsed)
 	return nil
 }
 

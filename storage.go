@@ -2,17 +2,70 @@ package proxmox
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 )
 
-var validContent = map[string]struct{}{
-	"iso":    struct{}{},
-	"vztmpl": struct{}{},
+func IsValidContent(content string) bool {
+	switch content {
+	case "iso", "vztmpl":
+		return true
+	default:
+		return false
+	}
+}
+
+func contentPath(node, storage string) string {
+	return fmt.Sprintf("/nodes/%s/storage/%s/content", node, storage)
+}
+
+func (c *Storage) Contents() ([]*Content, error) {
+	path := contentPath(c.Node, c.Storage)
+	var contents []*Content
+	if err := c.client.Get(path, &contents); err != nil {
+		return nil, err
+	}
+	for _, content := range contents {
+		content.client = c.client
+		content.Storage = c.Storage
+	}
+	return contents, nil
+}
+
+func (c *Storage) GetContent(name string) (*Content, error) {
+	path := contentPath(c.Node, c.Storage)
+	var contents []*Content
+	if err := c.client.Get(path, &contents); err != nil {
+		return nil, err
+	}
+	for _, content := range contents {
+		log.Println(content.VolID)
+		if content.VolID == name {
+			content.client = c.client
+			content.Storage = c.Storage
+			return content, nil
+		}
+	}
+	return nil, ErrNotFound
+}
+
+// to do : options
+func (c *Storage) CreateContent(filename string, size, vmid int) (*Content, error) {
+	path := contentPath(c.Node, c.Storage)
+	var content *Content
+	data := make(map[string]interface{})
+	data["filename"] = filename
+	data["size"] = size
+	data["vmid"] = vmid
+	if err := c.client.Post(path, data, &content); err != nil {
+		return nil, err
+	}
+	return content, nil
 }
 
 func (s *Storage) Upload(content, file string) (*Task, error) {
-	if _, ok := validContent[content]; !ok {
+	if !IsValidContent(content) {
 		return nil, fmt.Errorf("only iso and vztmpl allowed")
 	}
 
@@ -32,7 +85,7 @@ func (s *Storage) Upload(content, file string) (*Task, error) {
 	defer f.Close()
 
 	var upid UPID
-	if err := s.client.Upload(fmt.Sprintf("/nodes/%s/storage/%s/upload", s.Node, s.Name),
+	if err := s.client.Upload(fmt.Sprintf("/nodes/%s/storage/%s/upload", s.Node, s.Storage),
 		map[string]string{"content": content}, f, &upid); err != nil {
 		return nil, err
 	}
@@ -41,12 +94,12 @@ func (s *Storage) Upload(content, file string) (*Task, error) {
 }
 
 func (s *Storage) DownloadURL(content, filename, url string) (*Task, error) {
-	if _, ok := validContent[content]; !ok {
+	if !IsValidContent(content) {
 		return nil, fmt.Errorf("only iso and vztmpl allowed")
 	}
 
 	var upid UPID
-	s.client.Post(fmt.Sprintf("/nodes/%s/storage/%s/download-url", s.Node, s.Name), map[string]string{
+	s.client.Post(fmt.Sprintf("/nodes/%s/storage/%s/download-url", s.Node, s.Storage), map[string]string{
 		"content":  content,
 		"filename": filename,
 		"url":      url,
@@ -55,14 +108,14 @@ func (s *Storage) DownloadURL(content, filename, url string) (*Task, error) {
 }
 
 func (s *Storage) ISO(name string) (iso *ISO, err error) {
-	err = s.client.Get(fmt.Sprintf("/nodes/%s/storage/%s/content/%s:%s/%s", s.Node, s.Name, s.Name, "iso", name), &iso)
+	err = s.client.Get(fmt.Sprintf("/nodes/%s/storage/%s/content/%s:%s/%s", s.Node, s.Storage, s.Storage, "iso", name), &iso)
 	if err != nil {
 		return nil, err
 	}
 
 	iso.client = s.client
 	iso.Node = s.Node
-	iso.Storage = s.Name
+	iso.Storage = s.Storage
 	if iso.VolID == "" {
 		iso.VolID = fmt.Sprintf("%s:iso/%s", iso.Storage, name)
 	}
@@ -70,14 +123,14 @@ func (s *Storage) ISO(name string) (iso *ISO, err error) {
 }
 
 func (s *Storage) VzTmpl(name string) (vztmpl *VzTmpl, err error) {
-	err = s.client.Get(fmt.Sprintf("/nodes/%s/storage/%s/content/%s:%s/%s", s.Node, s.Name, s.Name, "vztmpl", name), &vztmpl)
+	err = s.client.Get(fmt.Sprintf("/nodes/%s/storage/%s/content/%s:%s/%s", s.Node, s.Storage, s.Storage, "vztmpl", name), &vztmpl)
 	if err != nil {
 		return nil, err
 	}
 
 	vztmpl.client = s.client
 	vztmpl.Node = s.Node
-	vztmpl.Storage = s.Name
+	vztmpl.Storage = s.Storage
 	if vztmpl.VolID == "" {
 		vztmpl.VolID = fmt.Sprintf("%s:vztmpl/%s", vztmpl.Storage, name)
 	}
@@ -85,28 +138,28 @@ func (s *Storage) VzTmpl(name string) (vztmpl *VzTmpl, err error) {
 }
 
 func (s *Storage) Backup(name string) (backup *Backup, err error) {
-	err = s.client.Get(fmt.Sprintf("/nodes/%s/storage/%s/content/%s:%s/%s", s.Node, s.Name, s.Name, "backup", name), &backup)
+	err = s.client.Get(fmt.Sprintf("/nodes/%s/storage/%s/content/%s:%s/%s", s.Node, s.Storage, s.Storage, "backup", name), &backup)
 	if err != nil {
 		return nil, err
 	}
 
 	backup.client = s.client
-	backup.Node = s.Node
-	backup.Storage = s.Name
+	backup.Node = s.Storage
+	backup.Storage = s.Storage
 	return
 }
 
-func (v *VzTmpl) Delete() (*Task, error) {
-	return deleteVolume(v.client, v.Node, v.Storage, v.VolID, v.Path, "vztmpl")
-}
+// func (v *VzTmpl) Delete() (*Task, error) {
+// 	return deleteVolume(v.client, v.Node, v.Storage, v.VolID, v.Path, "vztmpl")
+// }
 
-func (b *Backup) Delete() (*Task, error) {
-	return deleteVolume(b.client, b.Node, b.Storage, b.VolID, b.Path, "backup")
-}
+// func (b *Backup) Delete() (*Task, error) {
+// 	return deleteVolume(b.client, b.Node, b.Storage, b.VolID, b.Path, "backup")
+// }
 
-func (i *ISO) Delete() (*Task, error) {
-	return deleteVolume(i.client, i.Node, i.Storage, i.VolID, i.Path, "iso")
-}
+// func (i *ISO) Delete() (*Task, error) {
+// 	return deleteVolume(i.client, i.Node, i.Storage, i.VolID, i.Path, "iso")
+// }
 
 func deleteVolume(c *Client, n, s, v, p, t string) (*Task, error) {
 	var upid UPID

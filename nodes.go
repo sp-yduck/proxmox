@@ -1,8 +1,26 @@
 package proxmox
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 )
+
+type Node struct {
+	Client         *Client
+	Cpu            float32
+	Disk           int
+	ID             string
+	Level          string
+	MaxCpu         int
+	MaxMem         int
+	Mem            int
+	Node           string
+	SSLFingerprint string
+	Stauts         string
+	Type           string
+	UpTime         int
+}
 
 func (c *Client) Nodes() ([]*Node, error) {
 	var nodes []*Node
@@ -46,25 +64,26 @@ func (c *Node) VirtualMachines() ([]*VirtualMachine, error) {
 }
 
 func (c *Node) VirtualMachine(vmid int) (*VirtualMachine, error) {
-	vms, err := c.VirtualMachines()
-	if err != nil {
+	path := qemuPath(c.Node)
+	var vms []*VirtualMachine
+	if err := c.Client.Get(path, &vms); err != nil {
 		return nil, err
 	}
-	for _, v := range vms {
-		if v.VMID == vmid {
-			return v, nil
+	for _, vm := range vms {
+		if vm.VMID == vmid {
+			vm.Client = c.Client
+			vm.nodeName = c.Node
+			return vm, nil
 		}
 	}
 	return nil, ErrNotFound
 }
 
-// to do : options
-func (c *Node) CreateVirtualMachine(vmid int) (*VirtualMachine, error) {
+func (c *Node) CreateVirtualMachine(vmid int, options VirtualMachineCreateOptions) (*VirtualMachine, error) {
 	path := qemuPath(c.Node)
-	data := make(map[string]interface{})
-	data["vmid"] = vmid
+	options.VMID = vmid
 	var res string
-	if err := c.Client.Post(path, data, res); err != nil {
+	if err := c.Client.Post(path, options, res); err != nil {
 		return nil, err
 	}
 	vm, err := c.VirtualMachine(vmid)
@@ -84,20 +103,57 @@ func (c *Node) DeleteVirtualMachine(vmid int) (string, error) {
 	return res, nil
 }
 
-// func (c *Client) Node(name string) (*Node, error) {
-// 	var node Node
-// 	if err := c.Get(fmt.Sprintf("/nodes/%s/status", name), &node); err != nil {
-// 		return nil, err
-// 	}
-// 	node.Name = name
-// 	node.client = c
+func storagePath(nodeName string) string {
+	return fmt.Sprintf("/nodes/%s/storage", nodeName)
+}
 
-// 	return &node, nil
-// }
+func (c *Node) Storages() ([]*Storage, error) {
+	var storages []*Storage
+	if err := c.Client.Get(storagePath(c.Node), &storages); err != nil {
+		return nil, err
+	}
+	for _, s := range storages {
+		s.client = c.Client
+		s.Node = c.Node
+	}
+	return storages, nil
+}
 
-// func (n *Node) Version() (version *Version, err error) {
-// 	return version, n.client.Get("/nodes/%s/version", &version)
-// }
+func (c *Node) Storage(name string) (*Storage, error) {
+	var storages []*Storage
+	if err := c.Client.Get(storagePath(c.Node), &storages); err != nil {
+		return nil, err
+	}
+	for _, s := range storages {
+		if s.Storage == name {
+			s.client = c.Client
+			s.Node = c.Node
+			return s, nil
+		}
+	}
+	return nil, ErrNotFound
+}
+
+func StructToMap(data interface{}) (map[string]interface{}, error) {
+	jsonStr, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	out := new(bytes.Buffer)
+	err = json.Indent(out, jsonStr, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	var mapData map[string]interface{}
+	if err := json.Unmarshal([]byte(out.String()), &mapData); err != nil {
+		return nil, err
+	}
+	return mapData, err
+}
+
+func (n *Node) Version() (version *Version, err error) {
+	return version, n.Client.Get("/nodes/%s/version", &version)
+}
 
 // func (n *Node) TermProxy() (vnc *VNC, err error) {
 // 	return vnc, n.client.Post(fmt.Sprintf("/nodes/%s/termproxy", n.Name), nil, &vnc)
@@ -109,49 +165,6 @@ func (c *Node) DeleteVirtualMachine(vmid int) (string, error) {
 // 		n.Name, vnc.Port, url.QueryEscape(vnc.Ticket))
 
 // 	return n.client.VNCWebSocket(p, vnc)
-// }
-
-// func (n *Node) VirtualMachines() (vms VirtualMachines, err error) {
-// 	if err := n.client.Get(fmt.Sprintf("/nodes/%s/qemu", n.Name), &vms); err != nil {
-// 		return nil, err
-// 	}
-
-// 	for _, v := range vms {
-// 		v.client = n.client
-// 		v.Node = n.Name
-// 	}
-
-// 	return vms, nil
-// }
-
-// func (n *Node) NewVirtualMachine(vmid int, options ...VirtualMachineOption) (*Task, error) {
-// 	var upid UPID
-// 	data := make(map[string]interface{})
-// 	data["vmid"] = vmid
-
-// 	for _, option := range options {
-// 		data[option.Name] = option.Value
-// 	}
-
-// 	err := n.client.Post(fmt.Sprintf("/nodes/%s/qemu", n.Name), data, &upid)
-// 	return NewTask(upid, n.client), err
-// }
-
-// func (n *Node) VirtualMachine(vmid int) (*VirtualMachine, error) {
-// 	vm := &VirtualMachine{
-// 		client: n.client,
-// 		Node:   n.Name,
-// 	}
-
-// 	if err := n.client.Get(fmt.Sprintf("/nodes/%s/qemu/%d/status/current", n.Name, vmid), &vm); nil != err {
-// 		return nil, err
-// 	}
-
-// 	if err := n.client.Get(fmt.Sprintf("/nodes/%s/qemu/%d/config", n.Name, vmid), &vm.VirtualMachineConfig); err != nil {
-// 		return nil, err
-// 	}
-
-// 	return vm, nil
 // }
 
 // func (n *Node) Containers() (c Containers, err error) {
@@ -219,33 +232,6 @@ func (c *Node) DeleteVirtualMachine(vmid int) (string, error) {
 // 	return nil, fmt.Errorf("could not find vztmpl: %s", template)
 // }
 
-// func (n *Node) Storages() (storages Storages, err error) {
-// 	err = n.client.Get(fmt.Sprintf("/nodes/%s/storage", n.Name), &storages)
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	for _, s := range storages {
-// 		s.Node = n.Name
-// 		s.client = n.client
-// 	}
-
-// 	return
-// }
-
-// func (n *Node) Storage(name string) (storage *Storage, err error) {
-// 	err = n.client.Get(fmt.Sprintf("/nodes/%s/storage/%s/status", n.Name, name), &storage)
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	storage.Node = n.Name
-// 	storage.client = n.client
-// 	storage.Name = name
-
-// 	return
-// }
-
 // func (n *Node) StorageISO() (*Storage, error) {
 // 	return n.findStorageByContent("iso")
 // }
@@ -284,20 +270,17 @@ func (c *Node) DeleteVirtualMachine(vmid int) (string, error) {
 // 	return nil, ErrNotFound
 // }
 
-// func (n *Node) Networks() (networks NodeNetworks, err error) {
-// 	err = n.client.Get(fmt.Sprintf("/nodes/%s/network", n.Name), &networks)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	for _, v := range networks {
-// 		v.client = n.client
-// 		v.Node = n.Name
-// 		v.NodeAPI = n
-// 	}
-
-// 	return
-// }
+func (c *Node) Networks() ([]*NodeNetwork, error) {
+	var networks []*NodeNetwork
+	if err := c.Client.Get(fmt.Sprintf("/nodes/%s/network", c.Node), &networks); err != nil {
+		return nil, err
+	}
+	for _, n := range networks {
+		n.client = c.Client
+		n.Node = c.Node
+	}
+	return networks, nil
+}
 
 // func (n *Node) Network(iface string) (network *NodeNetwork, err error) {
 // 	err = n.client.Get(fmt.Sprintf("/nodes/%s/network/%s", n.Name, iface), &network)
