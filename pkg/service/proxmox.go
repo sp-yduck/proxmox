@@ -12,6 +12,7 @@ import (
 	"github.com/sp-yduck/proxmox/pkg/service/cluster"
 	"github.com/sp-yduck/proxmox/pkg/service/node"
 	storageapi "github.com/sp-yduck/proxmox/pkg/service/node/storage"
+	versionapi "github.com/sp-yduck/proxmox/pkg/service/version"
 )
 
 type Service struct {
@@ -70,6 +71,15 @@ func (c *Service) Node(name string) (*node.Node, error) {
 	return nil, api.ErrNotFound
 }
 
+// func (c *Service) Pools() ([]*poolapi.Pool, error) {
+// }
+
+// func (c *Service) Pool() (*poolapi.Pool, error) {
+// }
+
+// func (c *Service) CreatePool() (*poolapi.Pool, error) {
+// }
+
 func (c *Service) Storages() ([]*storageapi.Storage, error) {
 	var storages []*storageapi.Storage
 	if err := c.Get("/storage", &storages); err != nil {
@@ -81,33 +91,35 @@ func (c *Service) Storages() ([]*storageapi.Storage, error) {
 	return storages, nil
 }
 
-// func (c *Client) Storage(name string) (*Storage, error) {
-// 	var storages []*Storage
-// 	if err := c.Get("/storage", &storages); err != nil {
-// 		return nil, err
-// 	}
-// 	for _, s := range storages {
-// 		if s.Storage == name {
-// 			s.client = c
-// 			return s, nil
-// 		}
-// 	}
-// 	return nil, ErrNotFound
-// }
+func (c *Service) Storage(name string) (*storageapi.Storage, error) {
+	var storages []*storageapi.Storage
+	if err := c.Get("/storage", &storages); err != nil {
+		return nil, err
+	}
+	for _, s := range storages {
+		if s.Storage == name {
+			s.Client = c
+			return s, nil
+		}
+	}
+	return nil, api.ErrNotFound
+}
 
-// func (c *Client) CreateStorage(name, storageType string) (*Storage, error) {
-// 	var storage *Storage
-// 	data := make(map[string]interface{})
-// 	data["storage"] = name
-// 	data["type"] = storageType
-// 	if err := c.Post("/storage", data, &storage); err != nil {
-// 		return nil, err
-// 	}
-// 	return storage, nil
-// }
+// wip
+// to do : options
+func (c *Service) CreateStorage(name, storageType string) (*storageapi.Storage, error) {
+	var storage *storageapi.Storage
+	data := make(map[string]interface{})
+	data["storage"] = name
+	data["type"] = storageType
+	if err := c.Post("/storage", data, &storage); err != nil {
+		return nil, err
+	}
+	return storage, nil
+}
 
-func (c *Service) Version() (*Version, error) {
-	var version *Version
+func (c *Service) Version() (*versionapi.Version, error) {
+	var version *versionapi.Version
 	if err := c.Get("/version", &version); err != nil {
 		return nil, err
 	}

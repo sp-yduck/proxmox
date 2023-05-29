@@ -1,4 +1,4 @@
-package service
+package version
 
 type Version struct {
 	Release string `json:"release"`

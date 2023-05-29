@@ -2,12 +2,17 @@ package storage
 
 import (
 	"fmt"
-	"log"
-	// "os"
-	// "path/filepath"
 
 	"github.com/sp-yduck/proxmox/pkg/api"
 )
+
+func (c *Storage) Delete() (string, error) {
+	var res string
+	if err := c.Client.Delete(fmt.Sprintf("/storage/%s", c.Storage), &res); err != nil {
+		return "", err
+	}
+	return res, nil
+}
 
 func IsValidContent(content string) bool {
 	switch content {
@@ -42,7 +47,6 @@ func (c *Storage) GetContent(name string) (*Content, error) {
 		return nil, err
 	}
 	for _, content := range contents {
-		log.Println(content.VolID)
 		if content.VolID == name {
 			content.Client = c.Client
 			content.Storage = c.Storage
@@ -53,14 +57,22 @@ func (c *Storage) GetContent(name string) (*Content, error) {
 }
 
 // to do : options
-func (c *Storage) CreateContent(filename string, size, vmid int) (*Content, error) {
+func (c *Storage) CreateContent(filename string, size, vmid int, format string) (*Content, error) {
 	path := contentPath(c.Node, c.Storage)
-	var content *Content
 	data := make(map[string]interface{})
 	data["filename"] = filename
 	data["size"] = size
 	data["vmid"] = vmid
-	if err := c.Client.Post(path, data, &content); err != nil {
+	switch format {
+	case "raw", "qcow2", "subvlo":
+		data["format"] = format
+	}
+	var res string
+	if err := c.Client.Post(path, data, &res); err != nil {
+		return nil, err
+	}
+	content, err := c.GetContent(fmt.Sprintf("%s:%s", c.Storage, filename))
+	if err != nil {
 		return nil, err
 	}
 	return content, nil
@@ -95,19 +107,21 @@ func (c *Storage) CreateContent(filename string, size, vmid int) (*Content, erro
 // 	return NewTask(upid, s.Client), nil
 // }
 
-// func (s *Storage) DownloadURL(content, filename, url string) (*Task, error) {
-// 	if !IsValidContent(content) {
-// 		return nil, fmt.Errorf("only iso and vztmpl allowed")
-// 	}
-
-// 	var upid UPID
-// 	s.Client.Post(fmt.Sprintf("/nodes/%s/storage/%s/download-url", s.Node, s.Storage), map[string]string{
-// 		"content":  content,
-// 		"filename": filename,
-// 		"url":      url,
-// 	}, &upid)
-// 	return NewTask(upid, s.Client), nil
-// }
+// to do : checksums
+func (s *Storage) DownloadURL(content, filename, url string) (string, error) {
+	if !IsValidContent(content) {
+		return "", fmt.Errorf("only iso and vztmpl allowed")
+	}
+	var upid string
+	if err := s.Client.Post(fmt.Sprintf("/nodes/%s/storage/%s/download-url", s.Node, s.Storage), map[string]string{
+		"content":  content,
+		"filename": filename,
+		"url":      url,
+	}, &upid); err != nil {
+		return "", err
+	}
+	return upid, nil
+}
 
 // func (s *Storage) ISO(name string) (iso *ISO, err error) {
 // 	err = s.Client.Get(fmt.Sprintf("/nodes/%s/storage/%s/content/%s:%s/%s", s.Node, s.Storage, s.Storage, "iso", name), &iso)

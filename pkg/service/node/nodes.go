@@ -8,6 +8,7 @@ import (
 	"github.com/sp-yduck/proxmox/pkg/api"
 	storageapi "github.com/sp-yduck/proxmox/pkg/service/node/storage"
 	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
+	versionapi "github.com/sp-yduck/proxmox/pkg/service/version"
 )
 
 func qemuPath(node string) string {
@@ -47,7 +48,7 @@ func (c *Node) CreateVirtualMachine(vmid int, options vm.VirtualMachineCreateOpt
 	path := qemuPath(c.Node)
 	options.VMID = vmid
 	var res string
-	if err := c.Client.Post(path, options, res); err != nil {
+	if err := c.Client.Post(path, options, &res); err != nil {
 		return nil, err
 	}
 	vm, err := c.VirtualMachine(vmid)
@@ -115,9 +116,9 @@ func StructToMap(data interface{}) (map[string]interface{}, error) {
 	return mapData, err
 }
 
-// func (n *Node) Version() (version *Version, err error) {
-// 	return version, n.Client.Get("/nodes/%s/version", &version)
-// }
+func (n *Node) Version() (version *versionapi.Version, err error) {
+	return version, n.Client.Get("/nodes/%s/version", &version)
+}
 
 // func (n *Node) TermProxy() (vnc *VNC, err error) {
 // 	return vnc, n.client.Post(fmt.Sprintf("/nodes/%s/termproxy", n.Name), nil, &vnc)
