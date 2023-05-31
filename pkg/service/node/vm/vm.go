@@ -28,6 +28,15 @@ func (vm *VirtualMachine) Delete() (string, error) {
 	return res, nil
 }
 
+func (vm *VirtualMachine) Config() (*VirtualMachineConfig, error) {
+	path := fmt.Sprintf("%s/%d/config", qemuPath(vm.Node), vm.VMID)
+	var config *VirtualMachineConfig
+	if err := vm.Client.Get(path, &config); err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
 // func (v *VirtualMachine) Ping() error {
 // 	return v.client.Get(fmt.Sprintf("/nodes/%s/qemu/%d/status/current", v.Node, v.VMID), &v)
 // }

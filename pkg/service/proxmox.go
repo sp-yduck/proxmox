@@ -105,16 +105,14 @@ func (c *Service) Storage(name string) (*storageapi.Storage, error) {
 	return nil, api.ErrNotFound
 }
 
-// wip
-// to do : options
-func (c *Service) CreateStorage(name, storageType string) (*storageapi.Storage, error) {
+func (c *Service) CreateStorage(name, storageType string, options storageapi.StorageCreateOptions) (*storageapi.Storage, error) {
 	var storage *storageapi.Storage
-	data := make(map[string]interface{})
-	data["storage"] = name
-	data["type"] = storageType
-	if err := c.Post("/storage", data, &storage); err != nil {
+	options.Storage = name
+	options.StorageType = storageType
+	if err := c.Post("/storage", options, &storage); err != nil {
 		return nil, err
 	}
+	storage.Client = c.Client
 	return storage, nil
 }
 

@@ -14,19 +14,6 @@ func (c *Storage) Delete() (string, error) {
 	return res, nil
 }
 
-func IsValidContent(content string) bool {
-	switch content {
-	case "iso", "vztmpl":
-		return true
-	default:
-		return false
-	}
-}
-
-func contentPath(node, storage string) string {
-	return fmt.Sprintf("/nodes/%s/storage/%s/content", node, storage)
-}
-
 func (c *Storage) Contents() ([]*Content, error) {
 	path := contentPath(c.Node, c.Storage)
 	var contents []*Content
@@ -50,6 +37,7 @@ func (c *Storage) GetContent(name string) (*Content, error) {
 		if content.VolID == name {
 			content.Client = c.Client
 			content.Storage = c.Storage
+			content.Node = c.Node
 			return content, nil
 		}
 	}
