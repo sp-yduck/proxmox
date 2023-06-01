@@ -70,6 +70,10 @@ type Ide struct {
 	Ide2 string `json:"ide2,omitempty"`
 }
 
+type IPConfig struct {
+	IPConfig0 string `json:"ipconfig0,omitempty"`
+}
+
 type Net struct {
 	Net0 string `json:"net0,omitempty"`
 }
@@ -103,19 +107,20 @@ type VirtualMachineCreateOptions struct {
 	Cpu string `json:"cpu,omitempty"`
 	// limit of cpu usage : 0 ~
 	// 0 indicated no limit
-	CpuLimit    int    `json:",omitempty"`
-	Description string `json:",omitempty"`
+	CpuLimit    int    `json:"cpulimit,omitempty"`
+	Description string `json:"description,omitempty"`
 
 	// allow to overwrite existing VM
-	Force bool `json:",omitempty"`
+	Force bool `json:"force,omitempty"`
 	// Use volume as IDE hard disk or CD-ROM (n is 0 to 3).
 	// Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume.
 	// Use STORAGE_ID:0 and the 'import-from' parameter to import from an existing volume.
 	Ide
+	IPConfig
 	// enable/disable KVM hardware virtualization
-	Kvm bool `json:",omitempty"`
+	Kvm bool `json:"kvm,omitempty"`
 	// specifies the QEMU machine type
-	Machine string `json:",omitempty"`
+	Machine string `json:"machine,omitempty"`
 	// amount of RAM for the VM in MiB : 16 ~
 	Memory int `json:"memory,omitempty"`
 	// name for VM. Only used on the configuration web interface
@@ -123,7 +128,7 @@ type VirtualMachineCreateOptions struct {
 	// network device
 	Net
 	// specifies whether a VM will be started during system bootup
-	OnBoot bool `json:",omitempty"`
+	OnBoot bool `json:"onboot,omitempty"`
 	// quest OS
 	OSType OSType `json:"ostype,omitempty"`
 	// use volume as scsi hard disk or cd-rom
@@ -136,13 +141,13 @@ type VirtualMachineCreateOptions struct {
 	// number of sockets
 	Sockets int `json:"sockets,omitempty"`
 	// cloud-init setup public ssh keys (one key per line, OpenSSH format)
-	SSHKeys string `json:",omitempty"`
+	SSHKeys string `json:"sshkeys,omitempty"`
 	// start VM after it was created successfully
 	Start bool `json:"start,omitempty"`
 	// tags of the VM. only for meta information
-	Tags string `json:",omitempty"`
+	Tags string `json:"tags,omitempty"`
 	// enable/disable template
-	Template bool   `json:",omitempty"`
+	Template bool   `json:"template,omitempty"`
 	VGA      string `json:"vga,omitempty"`
 	// vm id
 	VMID int `json:"vmid,omitempty"`
