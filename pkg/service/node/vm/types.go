@@ -29,7 +29,7 @@ type ProcessStatus string
 
 const (
 	ProcessStatusRunning ProcessStatus = "running"
-	ProcessStautsStopped ProcessStatus = "stopped"
+	ProcessStatusStopped ProcessStatus = "stopped"
 	ProcessStatusPaused  ProcessStatus = "paused"
 )
 
