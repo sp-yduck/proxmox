@@ -2,14 +2,15 @@ package cluster
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
 func (c *Cluster) NextID() (int, error) {
-	var ret string
-	c.Client.Get("/cluster/nextid", &ret)
-	return strconv.Atoi(ret)
+	var nextid int
+	if err := c.Client.Get("/cluster/nextid", &nextid); err != nil {
+		return 0, err
+	}
+	return nextid, nil
 }
 
 // Resources retrieves a summary list of all resources in the cluster.
