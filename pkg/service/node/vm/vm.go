@@ -19,17 +19,20 @@ func qemuPath(node string) string {
 }
 
 // to do : options
-func (vm *VirtualMachine) Delete() (string, error) {
-	path := fmt.Sprintf("%s/%d", qemuPath(vm.Node), vm.VMID)
-	var res string
-	if err := vm.Client.Delete(path, res); err != nil {
-		return "", err
+func (vm *VirtualMachine) Delete() error {
+	path := fmt.Sprintf("%s/%d", qemuPath(vm.Node.Name()), vm.VMID)
+	var upid string
+	if err := vm.Client.Delete(path, &upid); err != nil {
+		return err
 	}
-	return res, nil
+	if err := vm.Node.EnsureTaskDone(upid); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (vm *VirtualMachine) Config() (*VirtualMachineConfig, error) {
-	path := fmt.Sprintf("%s/%d/config", qemuPath(vm.Node), vm.VMID)
+	path := fmt.Sprintf("%s/%d/config", qemuPath(vm.Node.Name()), vm.VMID)
 	var config *VirtualMachineConfig
 	if err := vm.Client.Get(path, &config); err != nil {
 		return nil, err

@@ -1,31 +1,54 @@
 package vm
 
-import ()
+import (
+	"github.com/sp-yduck/proxmox/pkg/service/node/storage"
+	"github.com/sp-yduck/proxmox/pkg/service/version"
+)
 
 type VirtualMachine struct {
 	Client    Client
-	Node      string
-	Cpu       float32
-	Cpus      int
-	Disk      int
-	DiskRead  int
-	DiskWrite int
-	MaxDisk   int
-	MaxMem    int
-	Mem       int
-	Name      string
-	NetIn     int
-	NetOut    int
-	Status    string
-	Template  int
-	UpTime    int
-	VMID      int
+	Node      Node
+	Cpu       float32       `json:",omitempty"`
+	Cpus      int           `json:"cpus,omitempty"`
+	Disk      int           `json:"disk,omitempty"`
+	DiskRead  int           `json:"diskread,omitempty"`
+	DiskWrite int           `json:"diskwrite,omitempty"`
+	MaxDisk   int           `json:"maxdisk,omitempty"`
+	MaxMem    int           `json:"maxmem,omitempty"`
+	Mem       int           `json:"mem,omitempty"`
+	Name      string        `json:"name,omitempty"`
+	NetIn     int           `json:"netin,omitempty"`
+	NetOut    int           `json:"netout,omitempty"`
+	Status    ProcessStatus `json:"status,omitempty"`
+	Template  int           `json:"template,omitempty"`
+	UpTime    int           `json:"uptime,omitempty"`
+	VMID      int           `json:"vmid,omitempty"`
 }
+
+type ProcessStatus string
+
+const (
+	ProcessStatusRunning ProcessStatus = "running"
+	ProcessStautsStopped ProcessStatus = "stopped"
+	ProcessStatusPaused  ProcessStatus = "paused"
+)
 
 type Client interface {
 	Get(p string, v interface{}) error
 	Post(p string, d interface{}, v interface{}) error
 	Delete(p string, v interface{}) error
+}
+
+type Node interface {
+	Name() string
+	VirtualMachines() ([]*VirtualMachine, error)
+	VirtualMachine(vmid int) (*VirtualMachine, error)
+	CreateVirtualMachine(vmid int, options VirtualMachineCreateOptions) (*VirtualMachine, error)
+	DeleteVirtualMachine(vmid int) (string, error)
+	Storages() ([]*storage.Storage, error)
+	Storage(name string) (*storage.Storage, error)
+	Version() (*version.Version, error)
+	EnsureTaskDone(string) error
 }
 
 type Arch string
@@ -152,12 +175,6 @@ type VirtualMachineCreateOptions struct {
 	// vm id
 	VMID int `json:"vmid,omitempty"`
 }
-
-const (
-	StatusVirtualMachineRunning = "running"
-	StatusVirtualMachineStopped = "stopped"
-	StatusVirtualMachinePaused  = "paused"
-)
 
 type VirtualMachineConfig struct {
 	// PVE Metadata

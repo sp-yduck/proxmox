@@ -1,12 +1,7 @@
 package node
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"time"
-
-	"github.com/pkg/errors"
 
 	"github.com/sp-yduck/proxmox/pkg/api"
 	storageapi "github.com/sp-yduck/proxmox/pkg/service/node/storage"
@@ -18,6 +13,10 @@ func qemuPath(node string) string {
 	return fmt.Sprintf("/nodes/%s/qemu", node)
 }
 
+func (c *Node) Name() string {
+	return c.Node
+}
+
 func (c *Node) VirtualMachines() ([]*vm.VirtualMachine, error) {
 	path := qemuPath(c.Node)
 	var vms []*vm.VirtualMachine
@@ -26,7 +25,7 @@ func (c *Node) VirtualMachines() ([]*vm.VirtualMachine, error) {
 	}
 	for _, vm := range vms {
 		vm.Client = c.Client
-		vm.Node = c.Node
+		vm.Node = c
 	}
 	return vms, nil
 }
@@ -40,7 +39,7 @@ func (c *Node) VirtualMachine(vmid int) (*vm.VirtualMachine, error) {
 	for _, vm := range vms {
 		if vm.VMID == vmid {
 			vm.Client = c.Client
-			vm.Node = c.Node
+			vm.Node = c
 			return vm, nil
 		}
 	}
@@ -54,12 +53,8 @@ func (c *Node) CreateVirtualMachine(vmid int, options vm.VirtualMachineCreateOpt
 	if err := c.Client.Post(path, options, &upid); err != nil {
 		return nil, err
 	}
-	task, err := c.WaitTask(upid)
-	if err != nil {
+	if err := c.EnsureTaskDone(upid); err != nil {
 		return nil, err
-	}
-	if !task.IsStatusOK() {
-		return nil, errors.New(task.Status)
 	}
 	return c.VirtualMachine(vmid)
 }
@@ -103,61 +98,6 @@ func (c *Node) Storage(name string) (*storageapi.Storage, error) {
 		}
 	}
 	return nil, api.ErrNotFound
-}
-
-func StructToMap(data interface{}) (map[string]interface{}, error) {
-	jsonStr, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-	out := new(bytes.Buffer)
-	err = json.Indent(out, jsonStr, "", "    ")
-	if err != nil {
-		return nil, err
-	}
-	var mapData map[string]interface{}
-	if err := json.Unmarshal([]byte(out.String()), &mapData); err != nil {
-		return nil, err
-	}
-	return mapData, err
-}
-
-func (c *Node) Tasks() ([]*Task, error) {
-	var tasks []*Task
-	if err := c.Client.Get(fmt.Sprintf("/nodes/%s/tasks", c.Node), &tasks); err != nil {
-		return nil, err
-	}
-	for _, t := range tasks {
-		t.Client = c.Client
-	}
-	return tasks, nil
-}
-
-func (c *Node) Task(upid string) (*Task, error) {
-	var tasks []*Task
-	if err := c.Client.Get(fmt.Sprintf("/nodes/%s/tasks", c.Node), &tasks); err != nil {
-		return nil, err
-	}
-	for _, t := range tasks {
-		if t.UPID == upid {
-			t.Client = c.Client
-			return t, nil
-		}
-	}
-	return nil, api.ErrNotFound
-}
-
-func (c *Node) WaitTask(upid string) (*Task, error) {
-	fmt.Println(upid)
-	for i := 0; i < 10; i++ {
-		task, err := c.Task(upid)
-		if api.IsNotFound(err) {
-			time.Sleep(time.Second * 1)
-			continue
-		}
-		return task, err
-	}
-	return nil, errors.New("task wait deadline exceeded")
 }
 
 func (n *Node) Version() (version *versionapi.Version, err error) {
