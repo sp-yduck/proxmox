@@ -1,15 +1,4 @@
-package cluster
-
-type Cluster struct {
-	Client
-}
-
-type Client interface {
-	Get(p string, v interface{}) error
-	Post(p string, d interface{}, v interface{}) error
-	Put(p string, d interface{}, v interface{}) error
-	Delete(p string, v interface{}) error
-}
+package service
 
 type Resource struct {
 	ID         string  `jsont:"id"`
@@ -33,7 +22,6 @@ type Resource struct {
 }
 
 type FirewallSecurityGroup struct {
-	Client  Client
 	Group   string          `json:"group,omitempty"`
 	Comment string          `json:"comment,omitempty"`
 	Rules   []*FirewallRule `json:"rules,omitempty"`

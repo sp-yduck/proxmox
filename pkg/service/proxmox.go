@@ -9,7 +9,6 @@ import (
 
 	"github.com/sp-yduck/proxmox/pkg/api"
 	"github.com/sp-yduck/proxmox/pkg/client"
-	"github.com/sp-yduck/proxmox/pkg/service/cluster"
 	"github.com/sp-yduck/proxmox/pkg/service/node"
 	storageapi "github.com/sp-yduck/proxmox/pkg/service/node/storage"
 	versionapi "github.com/sp-yduck/proxmox/pkg/service/version"
@@ -35,16 +34,16 @@ func NewServiceWithLogin(url, user, password string) (*Service, error) {
 	return &Service{Client: client}, nil
 }
 
-func (c *Service) Cluster() (*cluster.Cluster, error) {
-	cluster := cluster.Cluster{
-		Client: c.Client,
-	}
-	if err := c.Get("/cluster/status", &cluster); err != nil {
-		return nil, err
-	}
+// func (c *Service) ClusterStatus() (*cluster.ClusterStatus, error) {
+// 	cluster := cluster.Cluster{
+// 		Client: c.Client,
+// 	}
+// 	if err := c.Get("/cluster/status", &cluster); err != nil {
+// 		return nil, err
+// 	}
 
-	return &cluster, nil
-}
+// 	return &cluster, nil
+// }
 
 func (c *Service) Nodes() ([]*node.Node, error) {
 	var nodes []*node.Node
