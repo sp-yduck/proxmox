@@ -1,16 +1,21 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 )
 
 func (c *Service) NextID() (int, error) {
-	var nextid int
-	if err := c.Client.Get("/cluster/nextid", &nextid); err != nil {
+	var res json.Number
+	if err := c.Client.Get("/cluster/nextid", &res); err != nil {
 		return 0, err
 	}
-	return nextid, nil
+	nextid, err := res.Int64()
+	if err != nil {
+		return 0, err
+	}
+	return int(nextid), nil
 }
 
 // Resources retrieves a summary list of all resources in the cluster.
