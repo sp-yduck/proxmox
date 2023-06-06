@@ -154,6 +154,8 @@ type VirtualMachineCreateOptions struct {
 	OnBoot bool `json:"onboot,omitempty"`
 	// quest OS
 	OSType OSType `json:"ostype,omitempty"`
+	// Allow reboot. if set to '0' the VM exit on reboot
+	Reboot int `json:"reboot,omitempty"`
 	// use volume as scsi hard disk or cd-rom
 	// use special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume
 	// use STORAGE_ID:0 and the 'import-from' parameter to import from an existing volume.
