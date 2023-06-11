@@ -94,3 +94,12 @@ func (vm *VirtualMachine) Start(option StartOption) error {
 	}
 	return vm.Node.EnsureTaskDone(upid)
 }
+
+func (vm *VirtualMachine) Stop() error {
+	path := qemuPath(vm.Node.Name())
+	var upid string
+	if err := vm.Client.Post(fmt.Sprintf("%s/%d/status/stop", path, vm.VMID), nil, &upid); err != nil {
+		return err
+	}
+	return vm.Node.EnsureTaskDone(upid)
+}

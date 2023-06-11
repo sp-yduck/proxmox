@@ -40,6 +40,22 @@ func (vm *VirtualMachine) Config() (*VirtualMachineConfig, error) {
 	return config, nil
 }
 
+// size : The new size. With the `+` sign the value is added to the actual size of the volume
+// and without it, the value is taken as an absolute one.
+// Shrinking disk size is not supported.
+// size format : \+?\d+(\.\d+)?[KMGT]?
+func (vm *VirtualMachine) ResizeVolume(disk string, size string) error {
+	path := fmt.Sprintf("%s/%d/resize", qemuPath(vm.Node.Name()), vm.VMID)
+	request := make(map[string]interface{})
+	request["disk"] = disk
+	request["size"] = size
+	var v interface{}
+	if err := vm.Client.Put(path, request, &v); err != nil {
+		return err
+	}
+	return nil
+}
+
 // func (v *VirtualMachine) Ping() error {
 // 	return v.client.Get(fmt.Sprintf("/nodes/%s/qemu/%d/status/current", v.Node, v.VMID), &v)
 // }

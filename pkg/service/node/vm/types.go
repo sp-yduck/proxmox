@@ -36,7 +36,9 @@ const (
 type Client interface {
 	Get(p string, v interface{}) error
 	Post(p string, d interface{}, v interface{}) error
+	Put(p string, d interface{}, v interface{}) error
 	Delete(p string, v interface{}) error
+	Req(m string, p string, d []byte, v interface{}) error
 }
 
 type Node interface {

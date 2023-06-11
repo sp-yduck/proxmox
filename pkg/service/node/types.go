@@ -23,8 +23,10 @@ type Node struct {
 type Client interface {
 	Get(p string, v interface{}) error
 	Post(p string, d interface{}, v interface{}) error
+	Put(p string, d interface{}, v interface{}) error
 	Delete(p string, v interface{}) error
 	Upload(p string, d map[string]string, f *os.File, v interface{}) error
+	Req(m string, p string, d []byte, v interface{}) error
 }
 
 type Task struct {
