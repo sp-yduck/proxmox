@@ -150,6 +150,8 @@ type VirtualMachineCreateOptions struct {
 	Memory int `json:"memory,omitempty"`
 	// name for VM. Only used on the configuration web interface
 	Name string `json:"name,omitempty"`
+	// cloud-init: Sets DNS server IP address for a container. Create will automatically use the setting from the host if neither searchdomain nor nameserver are set.
+	NameServer string `json:"nameserver,omitempty"`
 	// network device
 	Net
 	// specifies whether a VM will be started during system bootup
@@ -164,6 +166,8 @@ type VirtualMachineCreateOptions struct {
 	Scsi
 	// SCSI controller model
 	ScsiHw ScsiHw `json:"scsihw,omitempty"`
+	// cloud-init: Sets DNS search domains for a container. Create will automatically use the setting from the host if neither searchdomain nor nameserver are set.
+	SearchDomain string `json:"searchdomain,omitempty"`
 	Serial
 	// number of sockets
 	Sockets int `json:"sockets,omitempty"`
