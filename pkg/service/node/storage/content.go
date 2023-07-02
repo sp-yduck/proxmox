@@ -19,3 +19,12 @@ func (c *Content) Volume() (*Volume, error) {
 	}
 	return volume, nil
 }
+
+func (c *Content) DeleteVolume() error {
+	path := contentPath(c.Node, c.Storage)
+	var taskid string
+	if err := c.Client.Delete(fmt.Sprintf("%s/%s", path, c.VolID), &taskid); err != nil {
+		return err
+	}
+	return nil
+}

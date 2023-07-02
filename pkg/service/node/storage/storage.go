@@ -27,14 +27,14 @@ func (c *Storage) Contents() ([]*Content, error) {
 	return contents, nil
 }
 
-func (c *Storage) GetContent(name string) (*Content, error) {
+func (c *Storage) GetContent(volID string) (*Content, error) {
 	path := contentPath(c.Node, c.Storage)
 	var contents []*Content
 	if err := c.Client.Get(path, &contents); err != nil {
 		return nil, err
 	}
 	for _, content := range contents {
-		if content.VolID == name {
+		if content.VolID == volID {
 			content.Client = c.Client
 			content.Storage = c.Storage
 			content.Node = c.Node
